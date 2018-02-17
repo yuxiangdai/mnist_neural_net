@@ -33,13 +33,20 @@ def df(x, y, W1, b1):
     dw = p - y
     return dot(dw, x) ## fix, include bias GD
 
+def f(x, y, W1, b1):
+    L0, L1, p = forward(x, W1, b1)  
+    C = NLL(p, y)
+    return C
+
+def NLL(y, y_):
+    return -sum(y_*log(y)) 
 
 def finite(x, y, theta, p, q):
     h = 0.001
     prev_cost = f(x, y, theta)
     deriv = df(x, y, theta)
     _theta = theta
-    theta[p, q] += h
+    theta[p, q] += h  # do some sort of add to the specific weight index i, j
     new_cost = f(x, y, theta)
 
     return float(abs(new_cost - prev_cost)) * 100 / float(prev_cost)
