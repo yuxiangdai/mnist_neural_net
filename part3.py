@@ -30,8 +30,8 @@ def forward(x, W1, b1 ):
 
 def df(x, y, W1, b1):
     L0, L1, p = forward(x, W1, b1)  
-    dw = p - y
-    return dot(dw, x) ## fix, include bias GD
+    dw = np.subtract(p, y) ## element-wise subtraction
+    return dot(dw, x) ## fix, include bias GD; also check x vs. dw dimensions match
 
 def f(x, y, W1, b1):
     L0, L1, p = forward(x, W1, b1)  
@@ -42,6 +42,7 @@ def NLL(y, y_):
     return -sum(y_*log(y)) 
 
 def finite(x, y, theta, p, q):
+    ### Fix, I just copied from A1
     h = 0.001
     prev_cost = f(x, y, theta)
     deriv = df(x, y, theta)
