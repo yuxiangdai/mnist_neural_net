@@ -21,9 +21,10 @@ def softmax(y):
     is the number of cases'''
     return exp(y)/tile(sum(exp(y),0), (len(y),1))
 
-def forward(x, W1, b1 ):
+def forward(x, W1, b1):
     # L0 = tanh_layer(x, W0, b0)
     L0 = x # first layer output, i.e. no hidden layer
-    L1 = dot(W1.T, L0) + b1 # linear combination of x's + bias
+    L1 = dot(W1.T, x).T + b1 # linear combination of x's + bias
     output = softmax(L1)
     return L0, L1, output
+

@@ -32,6 +32,7 @@ def save_numbers(digit):
 ### Uncomment to download photos ### 
 def part1():
     for i in range(10):
+        pass
         # save_numbers(i)   
 
 

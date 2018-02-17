@@ -9,32 +9,20 @@ import matplotlib.image as mpimg
 from scipy.ndimage import filters
 import urllib
 from numpy import random
-
+import math
 import cPickle
 
 import os
 from scipy.io import loadmat
-
-def softmax(y):
-    '''Return the output of the softmax function for the matrix of output y. y
-    is an NxM matrix where N is the number of outputs for a single case, and M
-    is the number of cases'''
-    return exp(y)/tile(sum(exp(y),0), (len(y),1))
-
-def forward(x, W1, b1 ):
-    # L0 = tanh_layer(x, W0, b0)
-    L0 = x # first layer output, i.e. no hidden layer
-    L1 = dot(W1.T, L0) + b1 # linear combination of x's + bias
-    output = softmax(L1)
-    return L0, L1, output
+from part2 import softmax, forward
 
 def df(x, y, W1, b1):
-    L0, L1, p = forward(x, W1, b1)  
+    L0, L1, p = forward(x, W1, b1)
     dw = np.subtract(p, y) ## element-wise subtraction
     return dot(dw, x) ## fix, include bias GD; also check x vs. dw dimensions match
 
 def f(x, y, W1, b1):
-    L0, L1, p = forward(x, W1, b1)  
+    L0, L1, p = forward(x, W1, b1)
     C = NLL(p, y)
     return C
 
@@ -51,3 +39,32 @@ def finite(x, y, theta, p, q):
     new_cost = f(x, y, theta)
 
     return float(abs(new_cost - prev_cost)) * 100 / float(prev_cost)
+
+M = loadmat("mnist_all.mat")
+
+#Load sample weights for the multilayer neural network
+snapshot = cPickle.load(open("snapshot50.pkl"))
+# pickle.load(open("snapshot50.pkl", "rb"), encoding="latin1")
+W0 = snapshot["W0"]
+b0 = snapshot["b0"].reshape((300,1))
+# W1 = snapshot["W1"]
+# b1 = snapshot["b1"].reshape((10,1))
+
+#Load one example from the training set, and run it through the
+#neural network
+x = M["train5"][148:149].T    
+
+x = x/255.
+### TEST CODE for Part 2 stuff
+
+W0 = np.random.random(7840).reshape((784, 10))
+b0 = np.random.random(10).reshape((1, 10))
+L0, L1, output = forward(x, W0, b0)
+#get the index at which the output is the largest
+y = argmax(output) ## exoect 
+
+
+
+
+### TEST Part 3 Here
+f(x, y, W1, b1)
