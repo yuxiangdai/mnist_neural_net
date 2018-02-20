@@ -62,12 +62,13 @@ y /= y.sum() ## need to sum to one
 def df(x, y, W, b1):
     L0, L1, p = forward(x, W, b1)
     dw = np.subtract(p, y) ## element-wise subtraction
-    return dot(dw, x.T).T ## calculate softmax gradient and confirm
+    return dot(dw, x.T).T  ## calculate softmax gradient and confirm
 
-def df_bias(x, y, W, b1):
-    L0, L1, p = forward(x, W, b1)
+def df_bias(x, y, W, b):
+    p = forward(x, W, b)
     dw = np.subtract(p, y) ## element-wise subtraction
-    return dw ## check is this makes sense
+    bias = dw.sum(axis=1)
+    return bias.reshape(10, 1) ## check is this makes sense
 
 def f(x, y, W1, b1):
     L0, L1, p = forward(x, W1, b1)
