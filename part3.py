@@ -47,7 +47,7 @@ x = M["train5"][148:149].T
 x = x/255.0 # Normalize x
 ### TEST CODE for Part 2 stuff
 
-np.random.seed(5)
+np.random.seed(0)
 
 # W1 = np.random.rand(784, 10)
 # b1 = np.random.rando(1, 10)
@@ -107,8 +107,6 @@ grad = df(x, y, W, b)
 
 finite(x, y, W, b, 220, 0)  ## 221st of digit 0
 
-
-
 def test_df():
     for p in range(np.shape(W[:,0])[0]):
         for q in range(np.shape(W[0])[0]):
@@ -117,8 +115,13 @@ def test_df():
                 
 # test_df()  
 
-            
-for p in range(np.shape(W[:,0])[0]):
-    for q in range(np.shape(W[0])[0]):
-        if grad[p, q]:
-            print(q, finite_bias(x, y, W, b, p, q))  
+q_visited = []
+
+def test_df_bias():
+    for p in range(np.shape(W[:,0])[0]):
+        for q in range(np.shape(W[0])[0]):
+            if grad[p, q] and q not in q_visited:
+                q_visited.append(q)
+                print(q, finite_bias(x, y, W, b, p, q))  
+
+test_df_bias()  
