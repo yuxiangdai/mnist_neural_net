@@ -63,7 +63,13 @@ init_b = b1
 
 alpha = 0.00001
 
+npzfile = np.load("p4_trainTest.npz")
+x = npzfile["trainingSet"]
+y = npzfile["trainingLabel"]
+x_test = npzfile["testSet"]
+y_test = npzfile["testLabel"]
 
+grad_descent(f, df, init_W, init_b, x, y, x_test, y_test, alpha, max_iter = 1000)
 
 def grad_descent(f, df, init_W, init_b, x, y, x_test, y_test, init_t, alpha, max_iter = 1000):
     EPS = 1e-5
@@ -91,7 +97,6 @@ def grad_descent(f, df, init_W, init_b, x, y, x_test, y_test, init_t, alpha, max
         cost = f(x, y, W, b)
         costs.append(cost)
 
-
         L0, L1, output = forward(x, W, b)
         trainCorrect = 0
         for i in range(np.shape(y)[0]):
@@ -100,7 +105,6 @@ def grad_descent(f, df, init_W, init_b, x, y, x_test, y_test, init_t, alpha, max
 
         trainingAccuracy = float(trainCorrect) / float(np.shape(y)[0])
         trainAccArr.append(trainingAccuracy)
-
 
         L0, L1, test_output = forward(x_test, W, b)
         testCorrect = 0
