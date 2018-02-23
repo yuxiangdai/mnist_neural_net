@@ -105,66 +105,266 @@ def momentum_grad_descent(f, df, init_W, init_b, x, y, x_test, y_test, alpha, ma
 
     return costs, testAccArr, trainAccArr
 
-
-snapshot = cPickle.load(open("snapshot50.pkl"))
-
-init_W = np.zeros((28 * 28, 10))
-init_b = np.zeros((10, 1))
-
-alpha = 0.00001
-
-npzfile = np.load("p4_trainTest.npz")
-x = npzfile["trainingSet"]
-y = npzfile["trainingLabel"].T
-x_test = npzfile["testSet"]
-y_test = npzfile["testLabel"]
-
-# momentum_grad_descent(f, df, init_W, init_b, x, y, x_test, y_test, alpha, max_iter = 1000, beta=0.9)
-
-results = np.load("p6_preproc.npz")
-W = results["W"]
-b = results["b"]
-
 def contourPlot(W, b, x, y):
+    '''
+    Code for Part 6a   
+    '''
 
-    
-
-    length = 50 # number of data points for contour plotting
-    diff = 0.05
+    # number of data points for contour plotting
+    diff = 0.05 # difference between data points tested
 
     w1 = W[403, 9]
     w2 = W[325, 8]
-    w1_datapts = np.linspace(w1 - diff, w1 + diff, length)
-    w2_datapts = np.linspace(w2 - diff, w2 + diff, length)
+    w1s = np.arange(w1 - 0.1, w1 + 0.1, 0.01)
+    w2s = np.arange(w2 - 0.1, w2 + 0.1, 0.01)
 
-    W1, W2 = np.meshgrid(w1_datapts, w2_datapts)
+    w1z, w2z = np.meshgrid(w1s, w2s)
     
-    cost_func = np.zeros((length, length))
-    for i in range(length):
-        for j in range(length):
-            W[403, 9] =  W1[i, j]
-            W[325, 8] =  W2[i, j]
-            cost_func[i, j] = f(x, y, W, b)
+    C = np.zeros([w1s.size, w2s.size])
+    for i, w1 in enumerate(w1s):
+        for j, w2 in enumerate(w2s):
+            W[403, 9] =  w1
+            W[325, 8] =  w2
+            C[i,j] = f(x, y, W, b)
         print i
 
 
+
     plt.figure()
-    CS = plt.contour(W1, W2, cost_func)
+    CS = plt.contour(w1z, w2z, C)
     plt.clabel(CS, inline=1, fontsize=10)
     plt.title('Contour Plot: Part 6a')
     plt.show()
     
-    np.savez("p6_a.npz", W1=W1, W2=W2, cost_func=cost_func)
+    np.savez("p6_a.npz", w1z=w1z, w2z=w2z, C=C)
+
+def two_weight_gd(f, df, init_W, init_b, x, y, x_test, y_test, alpha, max_iter = 10, beta=0.9):
+    EPS = 1e-5
+    
+    W = init_W.copy()
+    b = init_b.copy()
+    prev_W = init_W - 10*EPS
+    prev_b = init_b - 10*EPS
+    costs = []
+    trainAccArr = []
+    testAccArr = []
+    w1w2 = []
+  
+    iter = 0
+    while norm(W - prev_W) > EPS and norm(b - prev_b) > EPS and iter < max_iter:
+        prev_W = W.copy()
+        prev_b = b.copy()
+        w1w2.append((W[403, 9], W[325, 8]))
+        # prev_t = t.copy()
+        gradf = df(x, y, W, b)
+        gradf_bias = df_bias(x, y, W, b)
+
+        W[403, 9] -= alpha * gradf[403, 9]
+        b[9] -= alpha * gradf_bias[9]
+        W[325, 8] -= alpha * gradf[325, 8]
+        b[8] -= alpha *  gradf_bias[8]
+
+        iter += 1
+        print iter
+
+    return w1w2
+
+    np.savez("p6_b.npz", w1w2 = w1w2)
+
+def momentum_two_weight_gd(f, df, init_W, init_b, x, y, x_test, y_test, alpha, max_iter = 20, beta=0.9):
+    EPS = 1e-5
+    
+    W = init_W.copy()
+    b = init_b.copy()
+    # prev_t = init_t - 10*EPS
+    prev_W = init_W - 10*EPS
+    prev_b = init_b - 10*EPS
+    costs = []
+    trainAccArr = []
+    testAccArr = []
+    prev_gradf = np.zeros((784,10))
+    prev_gradf_bias = np.zeros((10,1))
+    w1w2 = []
+  
+    iter = 0
+    while norm(W - prev_W) > EPS and norm(b - prev_b) > EPS and iter < max_iter:
+        prev_W = W.copy()
+        prev_b = b.copy()
+        w1w2.append((W[403, 9], W[325, 8]))
+        # prev_t = t.copy()
+        gradf = df(x, y, W, b)
+        gradf_bias = df_bias(x, y, W, b)
+
+        W[403, 9] -= alpha * (beta * prev_gradf[403, 9] + gradf[403, 9])
+        b[9] -= alpha * (beta * prev_gradf_bias[9] + gradf_bias[9])
+        W[325, 8] -= alpha * (beta * prev_gradf[325, 8] + gradf[325, 8])
+        b[8] -= alpha * (beta * prev_gradf_bias[8] + gradf_bias[8])
+
+        prev_gradf = gradf.copy()
+        prev_gradf_bias = gradf_bias.copy()
 
 
-contourPlot(W, b, x, y)
 
-# cost_func = np.load("p6_costs.npz")["cost_func"]
-# W1cf = np.load("p6_costs.npz")["W1"]
-# W2cf = np.load("p6_costs.npz")["W2"]
+        iter += 1
+        print iter
 
+    return w1w2
 
-
-
+    np.savez("p6_c.npz", w1w2=w1w2)
 
 
+def part6a():
+    snapshot = cPickle.load(open("snapshot50.pkl"))
+
+    init_W = np.zeros((28 * 28, 10))
+    init_b = np.zeros((10, 1))
+
+    alpha = 0.00001
+
+    npzfile = np.load("p4_trainTest.npz")
+    x = npzfile["trainingSet"]
+    y = npzfile["trainingLabel"].T
+    x_test = npzfile["testSet"]
+    y_test = npzfile["testLabel"]
+
+    ## Get Data from p5
+    # momentum_grad_descent(f, df, init_W, init_b, x, y, x_test, y_test, alpha, max_iter = 1000, beta=0.9)
+
+    results = np.load("p6_preproc.npz")
+    W = results["W"]
+    b = results["b"]
+
+    contourPlot(W, b, x, y)
+
+
+def part6b():
+    npzfile = np.load("p4_trainTest.npz")
+    x = npzfile["trainingSet"]
+    y = npzfile["trainingLabel"].T
+    x_test = npzfile["testSet"]
+    y_test = npzfile["testLabel"]
+    alpha = 0.001
+
+    results = np.load("p6_preproc.npz")
+    W = results["W"]
+    b = results["b"]
+
+    # 0.4
+    _W = W.copy()
+    _W[403, 9] += 0.1
+    _W[325, 8] += 0.1
+
+    gd_traj = two_weight_gd(f, df, _W, b, x, y, x_test, y_test, alpha, max_iter = 20, beta=0.9)
+    
+    w1 = W[403, 9]
+    w2 = W[325, 8]
+    w1s = np.arange(w1 - 0.1, w1 + 0.1, 0.01)
+    w2s = np.arange(w2 - 0.1, w2 + 0.1, 0.01)
+
+    w1z, w2z = np.meshgrid(w1s, w2s)
+    
+    C = np.zeros([w1s.size, w2s.size])
+    for i, w1 in enumerate(w1s):
+        for j, w2 in enumerate(w2s):
+            W[403, 9] =  w1
+            W[325, 8] =  w2
+            C[i,j] = f(x, y, W, b)
+        print i
+
+    plt.figure()
+    CS = plt.contour(w1z, w2z, C)
+    plt.plot([a for a, b in gd_traj], [b for a,b in gd_traj], 'yo-', label="No Momentum")
+    # plt.plot([a for a, b in mo_traj], [b for a,b in mo_traj], 'go-', label="Momentum")
+    plt.title('6b: No Momentum')
+    plt.show()
+
+
+def part6c():
+        
+
+    npzfile = np.load("p4_trainTest.npz")
+    x = npzfile["trainingSet"]
+    y = npzfile["trainingLabel"].T
+    x_test = npzfile["testSet"]
+    y_test = npzfile["testLabel"]
+    alpha = 0.0001 # 0.0001 is good, 0.001 is not
+
+    results = np.load("p6_preproc.npz")
+    W = results["W"]
+    b = results["b"]
+
+    _W = W.copy()
+    _W[403, 9] += 0.1
+    _W[325, 8] += 0.1
+
+    mo_traj = momentum_two_weight_gd(f, df, _W, b, x, y, x_test, y_test, alpha, max_iter = 20, beta=0.9)
+    
+    w1 = W[403, 9]
+    w2 = W[325, 8]
+    w1s = np.arange(w1 - 0.1, w1 + 0.1, 0.01)
+    w2s = np.arange(w2 - 0.1, w2 + 0.1, 0.01)
+
+    w1z, w2z = np.meshgrid(w1s, w2s)
+    
+    C = np.zeros([w1s.size, w2s.size])
+    for i, w1 in enumerate(w1s):
+        for j, w2 in enumerate(w2s):
+            W[403, 9] =  w1
+            W[325, 8] =  w2
+            C[i,j] = f(x, y, W, b)
+        print i
+
+    plt.figure()
+    CS = plt.contour(w1z, w2z, C)
+    # plt.plot([a for a, b in gd_traj], [b for a,b in gd_traj], 'yo-', label="No Momentum")
+    plt.plot([a for a, b in mo_traj], [b for a,b in mo_traj], 'go-', label="Momentum")
+    plt.title('6c: Momentum')
+    plt.show()
+
+
+def part6e():
+    
+    npzfile = np.load("p4_trainTest.npz")
+    x = npzfile["trainingSet"]
+    y = npzfile["trainingLabel"].T
+    x_test = npzfile["testSet"]
+    y_test = npzfile["testLabel"]
+    alpha = 0.0001 # 0.0001 is good, 0.001 is not
+
+    results = np.load("p6_preproc.npz")
+    W = results["W"]
+    b = results["b"]
+    _W = W.copy()
+  
+    # 0.4
+    _W[403, 9] += 0.1
+    _W[325, 8] += 0.1
+
+    mo_traj = momentum_two_weight_gd(f, df, _W, b, x, y, x_test, y_test, alpha, max_iter = 20, beta=0.1)
+    gd_traj = two_weight_gd(f, df, _W, b, x, y, x_test, y_test, alpha, max_iter = 20)
+    
+    w1 = W[403, 9]
+    w2 = W[325, 8]
+    w1s = np.arange(w1 - 0.1, w1 + 0.1, 0.01)
+    w2s = np.arange(w2 - 0.1, w2 + 0.1, 0.01)
+
+    w1z, w2z = np.meshgrid(w1s, w2s)
+    
+    C = np.zeros([w1s.size, w2s.size])
+    for i, w1 in enumerate(w1s):
+        for j, w2 in enumerate(w2s):
+            W[403, 9] =  w1
+            W[325, 8] =  w2
+            C[i,j] = f(x, y, W, b)
+        print i
+
+    plt.figure()
+    CS = plt.contour(w1z, w2z, C)
+    plt.plot([a for a, b in gd_traj], [b for a,b in gd_traj], 'yo-', label="No Momentum")
+    plt.plot([a for a, b in mo_traj], [b for a,b in mo_traj], 'go-', label="Momentum")
+    plt.title('6e: Momentum Low Beta')
+    plt.legend(loc='upper left')
+    plt.show()
+
+# part6a()
+part6e()
